@@ -25,7 +25,7 @@
 
 <h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2022</h1>
 <h1 align="middle">Project 1: Rasterizer</h1>
-<h2 align="middle">Jeffrey Shen, Lulu Yu, CS184-??</h2>
+<h2 align="middle">Jeffrey Shen, Lulu Yu, CS184</h2>
 
 <br><br>
 
@@ -33,8 +33,10 @@
 
 <h2 align="middle">Overview</h2>
 <p>Give a high-level overview of what you implemented in this project. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the project.</p>
-<p>In this project, we implemented a Rasterizer for the svg file format. </p>
-<h2 align="middle">Section I: Rasterization</h2>
+<p>In this project, we implemented a Rasterizer for the svg file format. Some interesting things we've learned are how to rotate and scale and transform svg images. </p>
+<p>We have also really enjoyed learning about Barycentric coordinates and how we can apply their use case to not only pixel interpolation, but texture mapping. It was also
+really interesting to look into how svg's are created and makes me in awe at how so many images in the world can be created through just triangulations.</p>
+  <h2 align="middle">Section I: Rasterization</h2>
 
 <h3 align="middle">Part 1: Rasterizing single-color triangles</h3>
 <p>In order to rasterize triangles, we will first create a bounding box for the triangle. Then for each point in the
@@ -43,7 +45,6 @@ triangle, we will use the three line test to find out whether the center of the 
   to the edge and testing whether the point is on the inside part of the line by taking the dot product of the two
   points. We do this for all the points and if the point is on the interior of the line for all of the lines, then
   we know that the point is on the inside of the triangle. </p>
-<p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is a column in that row. You might find this useful for framing and showing your result images in an organized fashion.</p>
 
 <div align="middle">
   <table style="width=100%">
@@ -190,34 +191,64 @@ triangle, we will use the three line test to find out whether the center of the 
 
 <h3 align="middle">Part 6: "Level sampling" with mipmaps for texture mapping</h3>
 <p>
-	Level Sampling is the process of finding the right mipmap level to use for the corresponding image. We do this by
-	taking the derivative of 1 pixel with respect to dx and dy, then using Barycentric coordinates to convert it into the
-	uv space. This allows us to see how stretched out or compressed our image is and will allow us to determine which
-	mipmap level the image should be at. We implemented mipmap level zero, nearest level sampling, and bilinear level. The
-	mipmap level zeros uses only the level zero mipmap with the highest resolution. The nearest level sampling will calculate
-	the max derivative and take the log base 2 then round to the nearest mipmap level. The bilinear level will interpolate between the
-	two closes mipmap levels, taking the floor and ceiling of the level value, finding the texture color for both levels, then
-	linearly interpolating between the two colors.
-	<br/>
-	Pixel sampling is able to run relatively quickly to the original algorithm since it will just be finding the point
-	directly from the texture map, however bilinear pixel sampling may take up more time since we will need to do 3
-	lerp functions, pixel sampling will be the worst at antialiasing power because it applies the pixel sampling over
-	the entire image and can make the entire image crisp or blurry. Level sampling employs the use of mipmaps which are
-	images but at multiple resolutions and uses the image to figure out the best mipmap level to use that will create
-	the clearest image. This takes up more memory usage because we need to store the additional mipmaps however it
-	performs well at antialiasing because it can change blurriness or reduce high frequencies at different areas. The
-	runtime also takes a bit longer since we need to compute barycentric coordinates for different mipmap levels,
-	however performs well at creating an image that is antialised.
-	Changing the number of pixels allows us to create more subsamples per pixel and sample the image more. This works
-	well at reducing high frequncy changes int eh image and thus works well for antialiasing, however it had a large
-	impace on runtime in that each subsample must be sampled. The memory impact will depend on the number of subsamples
-	since the memory storage for pixel colors will be multiplied by the number of subsamples.
+  Level Sampling is the process of finding the right mipmap level to use for the corresponding image. We do this by
+  taking the derivative of 1 pixel with respect to dx and dy, then using Barycentric coordinates to convert it into the
+  uv space. This allows us to see how stretched out or compressed our image is and will allow us to determine which
+  mipmap level the image should be at. We implemented mipmap level zero, nearest level sampling, and bilinear level. The
+  mipmap level zeros uses only the level zero mipmap with the highest resolution. The nearest level sampling will calculate
+  the max derivative and take the log base 2 then round to the nearest mipmap level. The bilinear level will interpolate between the
+  two closes mipmap levels, taking the floor and ceiling of the level value, finding the texture color for both levels, then
+  linearly interpolating between the two colors.
+  <br/>
+  Pixel sampling is able to run relatively quickly to the original algorithm since it will just be finding the point
+  directly from the texture map, however bilinear pixel sampling may take up more time since we will need to do 3
+  lerp functions, pixel sampling will be the worst at antialiasing power because it applies the pixel sampling over
+  the entire image and can make the entire image crisp or blurry. Level sampling employs the use of mipmaps which are
+  images but at multiple resolutions and uses the image to figure out the best mipmap level to use that will create
+  the clearest image. This takes up more memory usage because we need to store the additional mipmaps however it
+  performs well at antialiasing because it can change blurriness or reduce high frequencies at different areas. The
+  runtime also takes a bit longer since we need to compute barycentric coordinates for different mipmap levels,
+  however performs well at creating an image that is antialised.
+  Changing the number of pixels allows us to create more subsamples per pixel and sample the image more. This works
+  well at reducing high frequncy changes int eh image and thus works well for antialiasing, however it had a large
+  impace on runtime in that each subsample must be sampled. The memory impact will depend on the number of subsamples
+  since the memory storage for pixel colors will be multiplied by the number of subsamples.
 
+  <div align="middle">
+    <table style="width=100%">
+      <tr>
+        <td>
+          <img src="images/p6_L0_p_near.png" align="middle" width="400px"/>
+          <figcaption align="middle">map w star at location, level 0 mipmap nearest pixel sample</figcaption>
+        </td>
+        <td>
+          <img src="images/p6_L0_p_linear.png" align="middle" width="400px"/>
+          <figcaption align="middle">map w star at location, level 0 mipmap bilinear pixel sample</figcaption>
+        </td>
+      </tr>
+      <br>
+      <tr>
+        <td>
+          <img src="images/p6_L_near_p_near.png" align="middle" width="400px"/>
+          <figcaption align="middle">map w star at location, nearest mipmap nearest pixel sample</figcaption>
+        </td>
+        <td>
+          <img src="images/p6_L_near_p_linear.png" align="middle" width="400px"/>
+          <figcaption align="middle">map w star at location, nearest mipmap bilinear pixel sample</figcaption>
+        </td>
+      </tr>
+    </table>
+  </div>
 
 </p>
 
+<h2 align="middle">Section III: Webpage Link</h2>
+  <p>
+    Link to webpage: <a href="https://cal-cs184-student.github.io/sp22-project-webpages-lulu-yu/proj1/index.html"> https://cal-cs184-student.github.io/sp22-project-webpages-lulu-yu/proj1/index.html</a>.
+  </p>
 
-<h2 align="middle">Section III: Art Competition</h2>
+
+<h2 align="middle">Section IV: Art Competition</h2>
 <p>If you are not participating in the optional art competition, don't worry about this section!</p>
 
 <h3 align="middle">Part 7: Draw something interesting!</h3>
