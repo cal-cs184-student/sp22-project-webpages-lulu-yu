@@ -1,7 +1,351 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 2 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+  <style>
+    body {
+      padding: 100px;
+      width: 1000px;
+      margin: auto;
+      text-align: left;
+      font-weight: 300;
+      font-family: 'Open Sans', sans-serif;
+      color: #121212;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      font-family: 'Source Sans Pro', sans-serif;
+    }
+  </style>
+  <title>CS 184 Mesh Editor</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+  <h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2020</h1>
+  <h1 align="middle">Project 2: Mesh Editor</h1>
+  <h2 align="middle">Lulu Yu, Jeffrey Shen, CS184</h2>
+
+  <br><br>
+
+  <div>
+
+    <h2 align="middle">Overview</h2>
+    <p>In this project we generated smooth surfaces and curves using a variety of techniques, as well as
+    transforming a cube into a smooth sphere. We started from 2D points and used recursive techniques to
+    make a line and then a surface. It was very interesting debugging because it really showed how important
+    care to attention is especially in tasks 4 and 5. Debugging task 6 was quite painful, but it was very rewarding
+    when the loop subdivision worked and the images began smoothening and appearing as expected. </p>
+
+    <h2 align="middle">Section I: Bezier Curves and Surfaces</h2>
+
+    <h3 align="middle">Part 1: Bezier curves with 1D de Casteljau subdivision</h3>
+    <p>
+
+
+      In this part, we want to create Bezier curves in 1D using the de Casteljau algorithm. We will use the control points,
+      find the points that are the fraction <code>t</code> down the line using linear interpolation. We will do this
+      to get a new set of points between the control points. This will be one level of subdivision deep of de
+      Casteljau's algorithm and we can keep subdividing.
+    </p>
+
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/p1_0_curve.png" align="middle" width="400px" />
+            <figcaption align="middle">Bezier Curve 1 control points</figcaption>
+          </td>
+          <td>
+            <img src="images/p1_1_subdiv.png" align="middle" width="400px" />
+            <figcaption align="middle">Bezier Curve 1 subdivision 1</figcaption>
+          </td>
+        </tr>
+        <br>
+        <tr>
+          <td>
+            <img src="images/p1_2_subdiv.png" align="middle" width="400px" />
+            <figcaption align="middle">Bezier Curve 1 subdivision 2</figcaption>
+          </td>
+          <td>
+            <img src="images/p1_3_subdiv.png" align="middle" width="400px" />
+            <figcaption align="middle">Bezier Curve 1 subdivision 3</figcaption>
+          </td>
+        </tr>
+        <br>
+        <tr>
+          <td>
+            <img src="images/p1_4_subdiv.png" align="middle" width="400px" />
+            <figcaption align="middle">Bezier Curve 1 subdivision 4</figcaption>
+          </td>
+          <td>
+            <img src="images/p1_curve.png" align="middle" width="400px" />
+            <figcaption align="middle">Bezier Curve 2</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+
+    <h3 align="middle">Part 2: Bezier surfaces with separable 1D de Casteljau subdivision</h3>
+
+    In this part, we want to create Bezier surfaces in 1D using the de Casteljau algorithm. We will use the control points to
+    find the points that are the fraction <code>t</code> down the line using linear interpolation. We will do this
+    to get a new set of points between the control points. This will be one level of subdivision deep of de Casteljau'salgorithm and
+    we can keep subdividing. Then we can iterate over nxn control points and interpolate with respect to the parameter u, yielding
+    a list of vectors that we then interpolate with respect to the parameter v to yield the final point to be used to create the 
+    Bezier patch.
+
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/p2_teapot.png" align="middle" width="400px" />
+            <figcaption align="middle">Bezier Surface Teapot Render</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <h2 align="middle">Section II: Sampling</h2>
+
+    <h3 align="middle">Part 3: Average normals for half-edge meshes</h3>
+
+      <p>
+      We want implement area weighted vertex normals of a vertex. We do this by traversing over all the faces that include that
+        vertex and find the area weighted normal, then add each of the normals to a final Vector3D which we will then normalize.
+        We find the area weighted normal by taking the cross product of the two other vertexes that make up the triangle. We can
+        traverse through the faces by using the halfedges. By using next->next->twin, we can get to the next face. Then we stop when we
+        reach the first halfedge again. This allows us to traverse through the faces, find the vertexes that make up each face,
+        take the cross product and add it to a final Vector3D, which we will normalize.
+      </p>
+
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/p3_flat_shading.png" align="middle" width="400px" />
+            <figcaption align="middle">Flat Shaded Teapot Render</figcaption>
+          </td>
+          <td>
+            <img src="images/p3_phlong_shading.png" align="middle" width="400px" />
+            <figcaption align="middle">Phlong Shaded Teapot Render</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <h3 align="middle">Part 4: Half-edge flip</h3>
+      <p>
+        In implementing an edge flip operation, we want to make sure all mesh elements pointers are updated so we
+        have the edge flipped. In order to do this, we set up a variables for all the mesh elements between two
+        triangles that we would want to do an edge flip on. Then we reset all the points to all the elements using
+        the <code>setNeighbors</code> function to the respective new elements using the variables we previously set.
+        By drawing out what the new structure should look like with all the new mesh elements placements and having
+        set variables for all the elements, this allowed us to make all our changes cleanly without having many
+        pointer issues. Once we realized that the
+        Iter mesh elements were pointers to the elements and set up our new variables, this allowed us to progress
+        through edge flips more easily
+        and we didn't run into any issues with debugging.
+      </p>
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/p4_orig.png" align="middle" width="400px" />
+            <figcaption align="middle">Original Teapot</figcaption>
+          </td>
+          <td>
+            <img src="images/p4_flip1.png" align="middle" width="400px" />
+            <figcaption align="middle">Teapot after 1 edge flip</figcaption>
+          </td>
+        </tr>
+        <br/>
+        <td>
+          <img src="images/p4_flip2.png" align="middle" width="400px" />
+          <figcaption align="middle">Teapot after multiple edge flips</figcaption>
+        </td>
+        </tr>
+      </table>
+    </div>
+
+    <h3 align="middle">Part 5: Half-edge split</h3>
+    <p>
+      We implemented the edge split relatively similarly to the Half edge flip. In order to do this, we set up a variables
+      for all the mesh elements between two triangles and drew out the diagram for the output of doing a half-edge
+      split. We first ended up creating all the new elements which are needed in a half-edge split which includes
+      one vertex, six half edges, two faces, three edges. After creating these variables and following the diagram we
+      drew out, we ended up resetting all the variables in each of the mesh elements. This allowed us to neatly reset
+      all the parameters necessary for half edge split. One issue we ran into after using this function in the next
+      part with loop subdivision was that we realized the 2 middle edges, where the previous edges was, should not
+      be marked as new edges. Once we realized and fixed this, we were able to fix our bug in half edge split and
+      have the correct loop subdivision.
+    </p>
+
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/p5_before.png" align="middle" width="400px" />
+            <figcaption align="middle">Original Teapot</figcaption>
+          </td>
+          <td>
+            <img src="images/p5_edgesplits.png" align="middle" width="400px" />
+            <figcaption align="middle">Teapot after multiple edge splits</figcaption>
+          </td>
+        </tr>
+        <br/>
+        <td>
+          <img src="images/p5_edgesplitsflips.png" align="middle" width="400px" />
+          <figcaption align="middle">Teapot after multiple edge splits and edge flips</figcaption>
+        </td>
+        </tr>
+      </table>
+    </div>
+
+    <h3 align="middle">Part 6: Loop subdivision for mesh upsampling</h3>
+
+    <p>
+      We implemented loop subdivision by following a set of steps by first computing the new vertices by using the
+      weighted average of neighboring vertex positions. We do this by adding all surrounding vertices by looping
+      through them with half edges, and adding it to a sum variable with will we multiply by the <code>u</code>
+      parameter which is calculated by looking at the degree of the vertex. We then add this with the current
+      location of the vertex to give us the placement of our new vertex. Then we traverse through all original edges
+      in the mesh and calculate the new edge placement using a similar format by adding together and weighting the
+      surrounding vertices of the new edge that is placed at the midpoint of the original edge. We then run the
+      subdivision function on the origional edges and set the new positions of the mid point vertices. Afterwards, we
+      flip all edges that are connecting a new vertex with an old vertex. Finally, we will replace all vertices with
+      their new positions. We had a couple issues with the loop subdivision which included making sure that the new
+      positions were correctly multiplied by floats instead of being casted to an integer if the mathematical
+      expression was typed in incorrectly, we also ran into issues with setting the <code>isNew</code> parameter on
+      vertices which we realized were incorreclty set and had to reset them in previous functions as well as verify
+      each was set correctly.
+    </p>
+
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/p6_hex1.png" align="middle" width="400px" />
+            <figcaption align="middle">Torus Original</figcaption>
+          </td>
+          <td>
+            <img src="images/p6_hex2.png" align="middle" width="400px" />
+            <figcaption align="middle">Torus Loop Subdivision 1</figcaption>
+          </td>
+        </tr>
+        <br>
+        <tr>
+          <td>
+            <img src="images/p6_hex3.png" align="middle" width="400px" />
+            <figcaption align="middle">Torus Loop Subdivision 2</figcaption>
+          </td>
+          <td>
+            <img src="images/p6_hex4.png" align="middle" width="400px" />
+            <figcaption align="middle">Torus Loop Subdivision 3</figcaption>
+          </td>
+        </tr>
+        <br>
+        <tr>
+          <td>
+            <img src="images/p6_cube1.png" align="middle" width="400px" />
+            <figcaption align="middle">Cube Original</figcaption>
+          </td>
+          <td>
+            <img src="images/p6_cube2.png" align="middle" width="400px" />
+            <figcaption align="middle">Cube Loop Subdivision 1</figcaption>
+          </td>
+        </tr>
+        <br>
+        <tr>
+          <td>
+            <img src="images/p6_cube3.png" align="middle" width="400px" />
+            <figcaption align="middle">Cube Loop Subdivision 2</figcaption>
+          </td>
+          <td>
+            <img src="images/p6_cube4.png" align="middle" width="400px" />
+            <figcaption align="middle">Cube Loop Subdivision 3</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <p>
+      We can see that with each loop subdivision, the corners get rounded out and the object becomes smaller as a
+      result because the edges cave inwards. We are able to see that is we do more splits on the object, it cane
+      become more smooth but always has smaller creases if the resulting triangles are uneven.
+    </p>
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/p6_cube_split.png" align="middle" width="400px" />
+            <figcaption align="middle">Cube Heavily Split at corner</figcaption>
+          </td>
+          <td>
+            <img src="images/p6_cube_split_loop.png" align="middle" width="400px" />
+            <figcaption align="middle">Cube Heavily Split at corner Loop Subdivision</figcaption>
+          </td>
+        </tr>
+        <br>
+        <tr>
+          <td>
+            <img src="images/p6_cube_symm1.png" align="middle" width="400px" />
+            <figcaption align="middle">Symmetrical Cube Split Original</figcaption>
+          </td>
+          <td>
+            <img src="images/p6_cube_symm2.png" align="middle" width="400px" />
+            <figcaption align="middle">Symmetrical Cube Split Loop Subdivision 1</figcaption>
+          </td>
+        </tr>
+        <br>
+        <tr>
+          <td>
+            <img src="images/p6_cube_symm3.png" align="middle" width="400px" />
+            <figcaption align="middle">Symmetrical Cube Split Loop Subdivision 2</figcaption>
+          </td>
+          <td>
+            <img src="images/p6_cube_symm4.png" align="middle" width="400px" />
+            <figcaption align="middle">Symmetrical Cube Split Loop Subdivision 3</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <p>
+      We can preprocess the cube by making the edges symmetrical on each side. This greatly improves the
+      asymmetric aspect of the previous loop subdivision runs. We realize that a symmetrical face and edges will
+      allow the final result to be more symmetric when it becomes rounded out.
+    </p>
+
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/p6_cow.png" align="middle" width="400px" />
+            <figcaption align="middle">Cute Cow!</figcaption>
+          </td>
+
+        </tr>
+
+      </table>
+    </div>
+
+    <h2 align="middle">Section III: Optional Extra Credit</h2>
+    <p>If you are not participating in the optional mesh competition, don't worry about this section!</p>
+
+    <h3 align="middle">Part 7: Design your own mesh!</h3>
+
+    <h2 align="middle">Section IV: Project Website</h2>
+	<p> <a href="https://cal-cs184-student.github.io/sp22-project-webpages-lulu-yu/proj2/index.html">Here</a> is our public website.
+		At link <a href="https://cal-cs184-student.github.io/sp22-project-webpages-lulu-yu/proj2/index.html">https://cal-cs184-student.github.io/sp22-project-webpages-lulu-yu/proj2/index.html</a>. </p>
+  
+</body>
+
 </html>
