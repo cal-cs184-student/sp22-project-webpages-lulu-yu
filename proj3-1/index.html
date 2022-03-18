@@ -1,7 +1,314 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 3-1 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+    body {
+        padding: 100px;
+        width: 1000px;
+        margin: auto;
+        text-align: left;
+        font-weight: 300;
+        font-family: 'Open Sans', sans-serif;
+        color: #121212;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        font-family: 'Source Sans Pro', sans-serif;
+    }
+    /*div.padded {  */
+    /*  padding-top: 0px;  */
+    /*  padding-right: 100px;  */
+    /*  padding-bottom: 0.25in;  */
+    /*  padding-left: 100px;  */
+    /*}  */
+  </style>
+<title>Jeffrey Shen, Lulu Yu  |  CS 184</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<!--<link rel="stylesheet" type="text/css" href="style.css" media="screen" />-->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+
+</head>
+<body>
+<br />
+    <h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2022</h1>
+    <h1 align="middle">Project 3: PathTracer</h1>
+    <h2 align="middle">Jeffrey Shen, Lulu Yu</h2>
+
+    <br><br>
+
+    <div class="padded">
+    <h2 align="middle">Overview</h2>
+        <p>In this project we learned a lot about lighting and ray tracing! We implemented various different methods
+        to yield renders of varying graininess, clarity, and shadow distribution. We start with ray tracing which
+            was implemented by generating rays and using their primitives to calculate when they intersect with the
+            rays and objects. Using different illumination methods such as direct illumination through uniform sampling over a hemisphere and importance light
+            sampling, and implementing global illumination, we create realistic renders. We then implmented various
+            acceleration structures for rendering such as using Bounding Volume Hiearchy (bvh) and converging
+            illuminance, we are able to more quickly render our realistic looking images. </p>
+
+    <h2 align="middle">Part 1: Ray Generation and Intersection</h2>
+        <p>In order to implement ray generation, we looped through ns_aa random samples that pass within the given
+            image pixel and then updated these samples' buffers to be the average global illumination radiance of each.
+            We transformed the ray from the image space into camera space using ratios of the sample in image space
+            and translated the point to the corresponded ratio in the camera space. For triangle intersection, we used
+            the Moller Trumbore Algorithm in order to check for intersection as well as calculate for the barycentric
+            coordinates at each point. For sphere intersection, we used the formula from lecture with the polynomial
+            equations that were then used to yield values for the quadratic formula in order to determine where there
+            were points that intersected with the sphere.
+
+        </p>
+        <div align="center">
+            <table style="width=100%">
+                <tr>
+                    <td align="middle">
+                    <img src="images/q1_room.png" width="480px" />
+                    <figcaption align="middle">Empty Room render</figcaption>
+                    <td align="middle">
+                        <img src="images/q1_spheres.png" width="480px" />
+                        <figcaption align="middle">Room with Spheres Render</figcaption>
+                </tr>
+            </table>
+        </div>
+
+
+    <h2 align="middle">Part 2: Bounding Volume Hierarchy</h2>
+        <p> In order to build our BVH tree, we recursively called our constructor that iterated through all
+            primitives of each node and at each node we calculated the dimensions of the bounding box. If
+            there were less than max_leaf_size primitives left, that node was designated as a leaf node.
+            Otherwise, we created two subtrees to the left and right. The heuristic we used to pick which axis to
+            split the node on to form the two subtrees was the longest axis. Then we then sorted the longest axis and
+            then split it in half. After we iterated to find the center split point, we called the construct bvh
+            function recursively setting the left and right children to be at the suitable indices considering the
+            new midpoint.
+        </p>
+        <p> The rendering of the images with the bounding volume hierarchy were much faster compared to without.
+            Previously without the BVH implemented, the cow took 12.8 seconds to render on our laptop, however after
+            implementing the BVH, the cow only took 1.4 seconds to render!
+        </p>
+        <div align="center">
+            <table style="width=100%">
+                <tr>
+                    <td align="middle">
+                        <img src="images/q2_cow.png" width="480px" />
+                        <figcaption align="middle">Cute Cow Render</figcaption>
+                    <td align="middle">
+                        <img src="images/q2_max.png" width="480px" />
+                        <figcaption align="middle">Max Planck Render</figcaption>
+                </tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/q2_lucy.png" width="480px" />
+                        <figcaption align="middle">Lucy in a room Render</figcaption>
+                </tr>
+            </table>
+        </div>
+
+    <h2 align="middle">Part 3: Direct Illumination</h2>
+        <p>We implemented the uniform hemisphere sampling method by first sampling from the hemisphere centered at
+            hit_p, the point of the ray, then creating a new ray from hit p to the sample. If there was an
+            intersection between the ray and the light sample, then we added the radiance of the point to the
+            running L_out, calculated using the formula given in the spec. Then we averaged the total radiance by
+            the number of samples. In order to implement direct lighting, we created a variable for the total number
+            of samples, but if the light was a delta light, we only sampled once, as noted by the spec. Then we
+            iterated through all the light samples, and sampled the light using the given sample_L, and created a ray
+            from the hit_p to that spans the distance to the light, because the ray should not intersect the light.
+            Then, we iterate through all the rays and light sources that don't intersect because if they do intersect
+            then there is an object obstructing the light, and so we can safely ignore that intersection. At these ray
+            and light sources that don't intersect, we calculate the radiance and divide by the pdf times the number
+            of samples to divide by the luminance. Last we add our radiances to a running sum and then average using
+            the total number of samples.
+        </p>
+        <p>The difference between uniform hemisphere sampling and lighting sampling was the graininess of the
+            rendered images. In the uniform hemisphere sampling,the shadow gradient coming from the light source is
+            very noticeable as individual dots on the image, and the shadow under the bunny is especially prominent.
+            However, after switching the render to use lighting sampling, the shadows as well as the surfaces are a lot
+            smoother and fluid.
+        </p>
+        <div align="center">
+            <table style="width=100%">
+                <tr>
+                    <td align="middle">
+                        <img src="images/q3_CBbunny_hemi.png" width="480px" />
+                        <figcaption align="middle">CBbunny generated with direct lighting with uniform
+                            hemisphere sampling</figcaption>
+                    <td align="middle">
+                        <img src="images/q3_CBbunny_light.png" width="480px" />
+                        <figcaption align="middle">CBbunny generated with direct lighting by Importance
+                            Sampling Lights</figcaption>
+                </tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/q3_bunny_l_1.png" width="480px" />
+                        <figcaption align="middle">CBbunny light sampling with 1 light samples</figcaption>
+                    <td align="middle">
+                        <img src="images/q3_bunny_l_4.png" width="480px" />
+                        <figcaption align="middle">CBbunny light sampling with 4 light samples</figcaption>
+                </tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/q3_bunny_l_16.png" width="480px" />
+                        <figcaption align="middle">CBbunny light sampling with 16 light samples</figcaption>
+                    <td align="middle">
+                        <img src="images/q3_bunny_l_64.png" width="480px" />
+                        <figcaption align="middle">CBbunny light sampling with 64 light samples</figcaption>
+                </tr>
+            </table>
+        </div>
+
+    <h2 align="middle">Part 4: Global Illumination</h2>
+        <p>In order to implement the indirect lighting function, we first implemented the base case such that if the
+            coin flip yielded the termination probability of 0.4, then we return L_out set at 0,0,0 and end the
+            recursion. If the coin flip won, then we'd check if the ray depth was greater than 1. If so, we would
+            check if the new ray intersects with another object, and if there is a collision, that means there is
+            another bounce. Hence, we'll add the new radiance of the next ray to the running radiance using the same
+            equation provided in the task 3 spec. However, this time, we recurse on at_least_one_bounce_radiance as
+            the L value, and we divide by the pdf multiplied by 1 - the termination probability. After the recursion
+            terminates and L_out is summed, we return the final radiance.
+        </p>
+        <table style="width=100%">
+            <tr>
+                <td align="middle">
+                    <img src="images/q3_bunny_l_64.png" width="480px" />
+                    <figcaption align="middle">Direct Illumination on Bunny with 1024 sample-per-pixel rate
+                    </figcaption>
+                <td align="middle">
+                    <img src="images/q4_bunny_indirect.png" width="480px" />
+                    <figcaption align="middle">Indirect Illumination on Bunny with 1024 Sample-per-pixel rate
+                    </figcaption>
+            </tr>
+        </table>
+
+        <table style="width=100%">
+            <tr>
+                <td align="middle">
+                    <img src="images/q4_bunny_m0_s1024.png" width="480px" />
+                     <figcaption align="middle">Bunny with 0 ray depth 1024 sample-per-pixel rate </figcaption>
+                <td align="middle">
+                    <img src="images/q4_bunny_m1_s1024.png" width="480px" />
+                    <figcaption align="middle">Bunny with 1 ray depth 1024 sample-per-pixel rate </figcaption>
+            </tr>
+            <tr>
+                <td align="middle">
+                    <img src="images/q4_bunny_m2_s1024.png" width="480px" />
+                    <figcaption align="middle">Bunny with 2 ray depth 1024 sample-per-pixel rate
+                    </figcaption>
+                <td align="middle">
+                    <img src="images/q4_bunny_m3_s1024.png" width="480px" />
+                    <figcaption align="middle">Bunny with 3 ray depth 1024 sample-per-pixel rate</figcaption>
+            </tr>
+            <tr>
+                <td align="middle">
+                    <img src="images/q4_bunny_m100_s1024.png" width="480px" />
+                    <figcaption align="middle">Bunny with 100 ray depth 1024 sample-per-pixel rate
+                    </figcaption>
+            </tr>
+        </table>
+        <p>
+            We can see that as we increase the max ray depth, the image gets brighter since the rays bounce more. We
+            see that from max ray depth 1 and 2, that the ceiling now has light as the rays bounce off the bunny back
+            up to the ceiling. However, due to rendering time constraints, we used a high monte carlo value which
+            lead to increase in graininess of the images for high ray depth images.
+        </p>
+        <div align="center">
+            <table style="width=100%">
+                <tr>
+                    <td align="middle">
+                        <img src="images/q4_coil_s1_l4.png" width="480px" />
+                        <figcaption align="middle">Coil Scene with 1 sample-per-pixel rate and 4 light rays
+                        </figcaption>
+                    <td align="middle">
+                        <img src="images/q4_coil_s2_l4.png" width="480px" />
+                        <figcaption align="middle">Coil Scene with 2 sample-per-pixel rate and 4 light rays</figcaption>
+                </tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/q4_coil_s4_l4.png" width="480px" />
+                        <figcaption align="middle">Coil Scene with 4 sample-per-pixel rate and 4 light rays
+                        </figcaption>
+                    <td align="middle">
+                        <img src="images/q4_coil_s8_l4.png" width="480px" />
+                        <figcaption align="middle">Coil Scene with 8 sample-per-pixel rate and 4 light rays</figcaption>
+                </tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/q4_coil_s16_l4.png" width="480px" />
+                        <figcaption align="middle">Coil Scene with 16 sample-per-pixel rate and 4 light rays
+                        </figcaption>
+                    <td align="middle">
+                        <img src="images/q4_coil_indirect_s64_l4.png" width="480px" />
+                        <figcaption align="middle">Coil Scene with 64 sample-per-pixel rate and 4 light
+                            rays</figcaption>
+                </tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/q4_coil_s1024_l4_no_a.png" width="480px" />
+                        <figcaption align="middle">Coil Scene with 1024 sample-per-pixel rate and 4 light rays
+                        </figcaption>
+                </tr>
+            </table>
+            <p>We can see from the multiple images of varying sample per pixel that the brightness increases and the
+                noise is slightly reduced. We have a greater brightness because as we take more samples per pixel, we
+                have a higher average radiance from the light values which are more likely to intersect with the
+                light. This will also reduce noise when we take more samples and get a more accurate representation
+                of the light that should be emitted.
+            </p>
+        </div>
+
+        <h2 align="middle">Part 5: Adaptive Sampling</h2>
+            <p>Our implementation of adaptive sampling followed the algorithm detailed in the spec. We iterated through
+                all the samples we need to evaluate, as quantified by ns_aa. Within this loop, we take a sample from
+                the grid, and generate a ray from the x, y arguments modified by the sample x,y and the sample buffer
+                values. Then we created a radiance variables to track the radiance and ultimately average the
+                radiance at the end. Most importantly, during the loop we sum s1 and s2 in preparation to calculate
+                the standard deviation to then use in the illuminance calculation to compare with max tolerance times
+                the mean. However, as the spec advised, we will not calculate the mean and standard deviation at
+                every sample, instead at every samplesPerBatch sample. So we use mod and when the index modulo
+                samplesPerBatch is 0, we will calculate a new mean and variance, and I value to check against the
+                maxTolerance times the mean. If the illuminance is less than the maxTolerance time the mean, then we
+                break out of the loop because we assume the pixel has converged. After the loop, we just average the
+                radiance and update the pixel and update the buffer.
+            </p>
+            <div align="center">
+                <table style="width=100%">
+                    <tr>
+                        <td align="middle">
+                            <img src="images/q5_bunny_s2048_no_mc.png" width="480px" />
+                            <figcaption align="middle">Bunny image at 2048 samples per pixel</figcaption>
+
+                        <td align="middle">
+                            <img src="images/q5_bunny_s2048_no_mc_rate.png" width="480px" />
+                            <figcaption align="middle">Bunny image rate at 2048 samples per pixel.</figcaption>
+                    </tr>
+                </table>
+            </div>
+        <p>
+            We can see that adaptive sampling was able to sample different parts of the image at different rates, we
+            can see that the light is sampled at lower sampling rates (blue) when the values are all very bright, and we
+            see
+            that the dark shadows underneath our bunny are also blue because the values are all similarly dark.
+            Unfortunately, our image ended up noisy since we did not have time to render at higher sampling rates and
+            also used higher monte carlo values.
+        </p>
+
+    <h2 align="middle">Project Website</h2>
+        <p> <a href="https://cal-cs184-student.github.io/sp22-project-webpages-lulu-yu/proj3-1/index.html">Here</a> is
+            our public website.
+            At link <a href="https://cal-cs184-student.github.io/sp22-project-webpages-lulu-yu/proj3-1/index.html">
+                https://cal-cs184-student.github.io/sp22-project-webpages-lulu-yu/proj3-1/index.html</a>. </p>
+
+<h2 align="middle">A Few Notes On Webpages</h2>
+    <p>Here are a few problems students have encountered in the past. You will probably encounter these problems at some point, so don't wait until right before the deadline to check that everything is working. Test your website on the instructional machines early!</p>
+        <ul>
+        <li>Your main report page should be called index.html.</li>
+        <li>Be sure to include and turn in all of the other files (such as images) that are linked in your report!</li>
+        <li>Use only <em>relative</em> paths to files, such as <pre>"./images/image.jpg"</pre>
+        Do <em>NOT</em> use absolute paths, such as <pre>"/Users/student/Desktop/image.jpg"</pre></li>
+        <li>Pay close attention to your filename extensions. Remember that on UNIX systems (such as the instructional machines), capitalization matters. <pre>.png != .jpeg != .jpg != .JPG</pre>
+        <li>Be sure to adjust the permissions on your files so that they are world readable. For more information on this please see this tutorial: <a href="http://www.grymoire.com/Unix/Permissions.html">http://www.grymoire.com/Unix/Permissions.html</a></li>
+        <li>And again, test your website on the instructional machines early!</li>
+</div>
+</body>
 </html>
