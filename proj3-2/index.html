@@ -1,7 +1,171 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 3-2 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+    body {
+        padding: 100px;
+        width: 1000px;
+        margin: auto;
+        text-align: left;
+        font-weight: 300;
+        font-family: 'Open Sans', sans-serif;
+        color: #121212;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        font-family: 'Source Sans Pro', sans-serif;
+    }
+</style>
+<title>Lulu Yu, Jeffrey Shen  |  CS 184</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet"></head>
+<body>
+<br />
+    <h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2022</h1>
+    <h1 align="middle">Project 3: PathTracer</h1>
+    <h2 align="middle">Lulu Yu, Jeffrey Shen</h2>
+
+    <br></br>
+    <div class="padded">
+        <h2 align="middle">Overview</h2>
+        <p>In this project 3-2, we added features to rendering our images by modeling how different materials
+            reflect/refract light and changing from a pinhole camera model to a thin lens camera model. We first
+            completed part 1 of the project where we wrote functions to deal with reflecting and refracting light and
+            creating glass materials to showcase both effects. We ran into issues with setting the pdf function, and our
+            R value but were able to debug them and finish rendering images that involved reflection and refraction! We
+            then completed part 4 of the project in which we model a thin lens camera by converting the camera space which
+            only viewed a view from one point to a circular thin lens in which you can adjust the radius (aperture) and set
+            a focal distance. This involved some code from project 3-1, part 1 but were able to use this to correctly find
+            the ray from the camera to the world. This allows us to render more different types of materials realistically
+            and adjust our aperture and focal distance to create more interesting and realistic images! </p>
+
+    <h2 align="middle">Part 1: Mirror and Glass Materials</h2>
+        <p>
+            In part 1 we first implemented our reflect function by using the perfect specular reflection function detailed
+        in lecture 14, using our two vectors wo and wi as well as the normal vector (0, 0, 1) dictated by the spec. Then
+        we implemented task 2, mirror material, involving the sample_f function. Following the spec, we set our pdf to 1
+        and stored the reflection of wo to wi, and then returned reflectance / abs_cos_theta(*wi) to cancel out the cosine
+        that at_least_one_bounce_radiance uses to multiply by. To implement refraction in task 3, we first checked the case
+        for if there was total internal reflection. In this case, there is no refraction, and we return false. Else, we
+        checked the sign of the z value of wo because the z value of wi should have the opposite sign, and if wo's z value
+        is negative our n value is also ior because we are exiting instead of entering the non-air material. Finally in
+        refract we set our wi to a new vector with the arguments detailed in the spec and we return true. In task 4, we
+        implement glass material for our spheres, which we implemented by following the pseudocode outlined in the spec.
+        We had some trouble with typos when implementing part 4 which took a while to debug and finally achieve the
+        correct renders.
+        </p>
+            Let m indicate max ray depth for this paragraph. From m0 to m1, the new multibounce effect lights up the room.
+            The spheres still remain dark
+            because there is only 1 bounce of light that bounce off the spheres toward the camera. From m1 to m2,
+            the left sphere is lit because the ray makes 2 bounces: 1 onto the sphere and the second a reflection
+            off the sphere to show its mirror coating. From m2 to m3, the right sphere is lit now with a mirror coating
+            because the ray now bounces on the sphere, enters, and exits to then appear with the mirror coating. From m3
+            to m4, the forth ray bounces inside the left sphere to highlight the reflection of the right sphere on the
+            left sphere. Also, the ray bounces off the right sphere to cast a refraction on the right wall. From m4 to
+            m5, there is more bounce between the right sphere and its shadow on the ground, creating a brighter gradient
+            on the bottom. From m5 to m100, the image overall is brighter because of more bounces throught the objects
+            in the image and the wall. Higher bounce numbers indicate more light refraction in the image as well as
+            clearer mirror images on the mirror surfaces of the left sphere.
+        <p>
+
+        </p>
+        <div align="center">
+            <table style="width=100%">
+
+                <tr>
+                    <td align="middle">
+                        <img src="images/spheres_s64_l4_m0.png" width="480px" />
+                        <figcaption align="middle">CBspheres rendered with 64 samples per pixel,
+                            4 samples per light, and max ray depth 0.</figcaption>
+                    <td align="middle">
+                        <img src="images/spheres_s64_l4_m1.png" width="480px" />
+                        <figcaption align="middle">CBspheres rendered with 64 samples per pixel,
+                            4 samples per light, and max ray depth 1.</figcaption>
+                </tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/spheres_s64_l4_m2.png" width="480px" />
+                        <figcaption align="middle">CBspheres rendered with 64 samples per pixel,
+                            4 samples per light, and max ray depth 2.</figcaption>
+                    <td align="middle">
+                        <img src="images/spheres_s64_l4_m3.png" width="480px" />
+                        <figcaption align="middle">CBspheres rendered with 64 samples per pixel,
+                            4 samples per light, and max ray depth 3.</figcaption>
+                </tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/spheres_s64_l4_m4.png" width="480px" />
+                        <figcaption align="middle">CBspheres rendered with 64 samples per pixel,
+                            4 samples per light, and max ray depth 4.</figcaption>
+                    <td align="middle">
+                        <img src="images/spheres_s64_l4_m5.png" width="480px" />
+                        <figcaption align="middle">CBspheres rendered with 64 samples per pixel,
+                            4 samples per light, and max ray depth 5.</figcaption>
+                </tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/spheres_s64_l4_m100.png" width="480px" />
+                        <figcaption align="middle">CBspheres rendered with 64 samples per pixel,
+                            4 samples per light, and max ray depth 100.</figcaption>
+                </tr>
+            </table>
+        </div>
+
+    <h2 align="middle">Part 4: Depth of Field</h2>
+    <p>In part 4, we implemented a thin lens camera model onto our rendering. In the pinhole camera model, we viewed the
+        world from the camera only through a single point, the origin. In the thin lens model, we model it by viewing
+        our camera through a lens, a circle with a radius, and have an adjustable focal distance. This allows us to play
+        around with the aperture and focal distance. The thin lenses model is different because on the image plane, we
+        now have multiple light rays coming from the circular lens and not just the one ray from the origin in a pinhole
+        camera model. By having the thin lens model and being able to adjust the aperture and focal distance, we can
+        adjust blur and focus in our image and create cool effects!</p>
+    <div align="center">
+        <table style="width=100%">
+
+            <tr>
+                <td align="middle">
+                    <img src="images/dragon_s64_b0.15_d4.75.png" width="480px" />
+                    <figcaption align="middle">"Focus Stack" Dragon at s64, b0.15, d4.75</figcaption>
+                <td align="middle">
+                    <img src="images/dragon_s64_b0.75_d4.75.png" width="480px" />
+                    <figcaption align="middle">"Focus Stack" Dragon at s64, b0.75, d4.75</figcaption>
+            </tr>
+            <tr>
+                <td align="middle">
+                    <img src="images/dragon_s64_b1.0_d4.75.png" width="480px" />
+                    <figcaption align="middle">"Focus Stack" Dragon at s64, b1.0, d4.75</figcaption>
+                <td align="middle">
+                    <img src="images/dragon_s64_b1.23_d4.75.png" width="480px" />
+                    <figcaption align="middle">"Focus Stack" Dragon at s64, b1.23, d4.75</figcaption>
+            </tr>
+            <tr>
+                <td align="middle">
+                    <img src="images/dragon_s64_b1.0_d4.56.png" width="480px" />
+                    <figcaption align="middle">"Aperture" Dragon at s64, b1.0, d4.56</figcaption>
+                <td align="middle">
+                    <img src="images/dragon_s64_b1.0_d4.75.png" width="480px" />
+                    <figcaption align="middle">"Aperture" Dragon at s64, b1.0, d4.75</figcaption>
+            </tr>
+            <tr>
+                <td align="middle">
+                    <img src="images/dragon_s64_b1.0_d5.0.png" width="480px" />
+                    <figcaption align="middle">"Aperture" Dragon at s64, b1.0, d5.0</figcaption>
+                <td align="middle">
+                    <img src="images/dragon_s64_b1.0_d5.56.png" width="480px" />
+                    <figcaption align="middle">"Aperture" Dragon at s64, b1.0, d5.56</figcaption>
+            </tr>
+        </table>
+    </div>
+
+
+    <h2 align="middle">Project Webpage</h2>
+        <p> <a href="https://cal-cs184-student.github.io/sp22-project-webpages-lulu-yu/proj3-2/index.html">Here</a> is our
+            public website.
+            At link <a href="https://cal-cs184-student.github.io/sp22-project-webpages-lulu-yu/proj3-2/index.html">
+                https://cal-cs184-student.github.io/sp22-project-webpages-lulu-yu/proj3-2/index.html</a>. </p>
+</div>
+</body>
 </html>
